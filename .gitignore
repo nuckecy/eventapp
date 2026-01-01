@@ -38,3 +38,26 @@ next-env.d.ts
 
 # prisma
 /prisma/migrations
+
+# playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+Thumbs.db
+
+# Logs
+logs
+*.log
+
+# Temp files
+*.tmp
+*.temp

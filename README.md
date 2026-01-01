@@ -89,7 +89,16 @@ eventapp/
 
 ## Documentation
 
-See [PRD-Church-Event-Management-v2.md](./PRD-Church-Event-Management-v2.md) for detailed product requirements and specifications.
+All project documentation is organized in the `/docs` directory:
+
+- **[Getting Started Guide](./docs/setup/SETUP_SUMMARY.md)** - Complete setup instructions
+- **[API Documentation](./docs/api/API_ENDPOINTS_SUMMARY.md)** - All API endpoints and schemas
+- **[Component Documentation](./docs/components/)** - UI component specifications
+- **[Product Requirements](./docs/planning/PRD-Church-Event-Management-v2.md)** - Detailed product specifications
+- **[Security Audit](./docs/audits/SECURITY_AUDIT_REPORT.md)** - Security assessment and recommendations
+- **[Accessibility Report](./docs/audits/ACCESSIBILITY_AUDIT_REPORT.md)** - WCAG compliance audit
+
+For a complete overview, see the [Documentation Index](./docs/README.md).
 
 ## License
 
