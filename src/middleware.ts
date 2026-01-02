@@ -1,8 +1,9 @@
-import { withAuth } from "next-auth/middleware"
 import { NextResponse } from "next/server"
+import type { NextRequest } from "next/server"
+import { getToken } from "next-auth/jwt"
 
 /**
- * NextAuth Middleware for Route Protection
+ * NextAuth v5 Middleware for Route Protection
  *
  * This middleware protects routes that require authentication.
  * It runs before every request and checks if the user is authenticated.
@@ -23,79 +24,72 @@ import { NextResponse } from "next/server"
  * Features:
  * - Automatic redirect to /login for unauthenticated users
  * - Preserves callback URL for post-login redirect
- * - Role-based access control in callbacks
+ * - Role-based access control
  * - CSRF protection via NextAuth
  */
 
-export default withAuth(
-  function middleware(req) {
-    const token = req.nextauth.token
-    const pathname = req.nextUrl.pathname
+export async function middleware(request: NextRequest) {
+  const pathname = request.nextUrl.pathname
 
-    // Role-based access control
-    // You can add custom logic here to restrict access based on user role
-    if (pathname.startsWith("/dashboard/super-admin")) {
-      if (token?.role !== "superadmin") {
-        return NextResponse.redirect(new URL("/dashboard", req.url))
-      }
-    }
+  // Define public routes that don't require authentication
+  const publicRoutes = [
+    "/",
+    "/contact",
+    "/login",
+    "/api/events",
+    "/api/departments",
+  ]
 
-    if (pathname.startsWith("/dashboard/admin")) {
-      if (token?.role !== "admin" && token?.role !== "superadmin") {
-        return NextResponse.redirect(new URL("/dashboard", req.url))
-      }
-    }
+  // Check if route is public
+  const isPublicRoute = publicRoutes.some((route) => pathname === route)
 
-    if (pathname.startsWith("/dashboard/lead")) {
-      if (
-        token?.role !== "lead" &&
-        token?.role !== "admin" &&
-        token?.role !== "superadmin"
-      ) {
-        return NextResponse.redirect(new URL("/dashboard", req.url))
-      }
-    }
+  // Allow API auth routes
+  const isAuthRoute = pathname.startsWith("/api/auth")
 
-    // Allow the request to proceed
+  // Allow public routes and auth routes without authentication
+  if (isPublicRoute || isAuthRoute) {
     return NextResponse.next()
-  },
-  {
-    callbacks: {
-      /**
-       * Authorized callback
-       * Return true to allow access, false to redirect to login
-       */
-      authorized: ({ token, req }) => {
-        const pathname = req.nextUrl.pathname
-
-        // Allow access to public routes without authentication
-        const publicRoutes = [
-          "/",
-          "/contact",
-          "/login",
-          "/api/events",
-          "/api/departments",
-        ]
-
-        // Check if route is public
-        if (publicRoutes.some((route) => pathname === route)) {
-          return true
-        }
-
-        // Allow API auth routes
-        if (pathname.startsWith("/api/auth")) {
-          return true
-        }
-
-        // Protect all other routes - require authentication
-        return !!token
-      },
-    },
-    pages: {
-      signIn: "/login", // Redirect to custom login page
-    },
   }
-)
+
+  // Get the token using NextAuth's getToken helper
+  const token = await getToken({
+    req: request,
+    secret: process.env.NEXTAUTH_SECRET
+  })
+
+  // If no token and accessing protected route, redirect to login
+  if (!token) {
+    const url = new URL("/login", request.url)
+    url.searchParams.set("callbackUrl", pathname)
+    return NextResponse.redirect(url)
+  }
+
+  // Role-based access control for specific dashboard routes
+  if (pathname.startsWith("/dashboard/super-admin")) {
+    if (token.role !== "superadmin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+  }
+
+  if (pathname.startsWith("/dashboard/admin")) {
+    if (token.role !== "admin" && token.role !== "superadmin") {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+  }
+
+  if (pathname.startsWith("/dashboard/lead")) {
+    if (
+      token.role !== "lead" &&
+      token.role !== "admin" &&
+      token.role !== "superadmin"
+    ) {
+      return NextResponse.redirect(new URL("/dashboard", request.url))
+    }
+  }
+
+  // Allow the request to proceed
+  return NextResponse.next()
+}
 
 /**
  * Matcher Configuration

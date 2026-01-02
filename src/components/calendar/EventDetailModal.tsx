@@ -174,6 +174,7 @@ export function EventDetailModal({ event, isOpen, onClose }: EventDetailModalPro
             </Button>
           </div>
         </div>
+        </div>
       </FocusTrap>
     </div>
   );

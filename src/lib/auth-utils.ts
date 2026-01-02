@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs"
-import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
-import { authOptions } from "./auth"
+import { auth } from "./auth"
 import type { Role } from "@prisma/client"
 
 /**
@@ -31,10 +30,11 @@ export async function verifyPassword(
 /**
  * Get current session on server-side
  * This function can be used in Server Components, Server Actions, and API Routes
+ * NextAuth v5 uses the auth() function instead of getServerSession()
  * @returns Session object or null if not authenticated
  */
 export async function getSession() {
-  return await getServerSession(authOptions)
+  return await auth()
 }
 
 /**

@@ -15,7 +15,7 @@ A Next.js-based web application for streamlined event planning, approval, and co
 
 - **Framework**: Next.js 14+ (App Router)
 - **Language**: TypeScript 5+
-- **UI Components**: Shadcn UI (Nova style, Lime theme)
+- **UI Components**: Shadcn UI (Nova style, Indigo theme)
 - **Styling**: Tailwind CSS
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: NextAuth.js v5

@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { SkipLink } from "@/components/accessibility";
+import { SessionProvider } from "@/components/providers";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -25,9 +26,10 @@ export default function RootLayout({
       <body className={`${inter.variable} font-sans antialiased`}>
         {/* WCAG 2.4.1: Skip to main content link */}
         <SkipLink />
-        {/* SessionProvider will be added here when NextAuth is implemented */}
-        {children}
-        <Toaster />
+        <SessionProvider>
+          {children}
+          <Toaster />
+        </SessionProvider>
       </body>
     </html>
   );

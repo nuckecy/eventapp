@@ -1,8 +1,8 @@
-import { NextAuthOptions } from "next-auth"
+import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
-import { verifyPassword } from "@/lib/auth-utils"
+import bcrypt from "bcryptjs"
 import type { User as PrismaUser } from "@prisma/client"
 
 /**
@@ -47,10 +47,10 @@ declare module "next-auth/jwt" {
  * - Secure session cookies with HTTP-only and SameSite flags
  * - CSRF protection enabled by default
  */
-export const authOptions: NextAuthOptions = {
+export const { handlers, signIn, signOut, auth } = NextAuth({
   // Use Prisma adapter for database session management (optional)
   // Comment out if using JWT-only strategy
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma),
 
   // Session strategy: JWT (stateless) or Database (stateful)
   session: {
@@ -99,7 +99,7 @@ export const authOptions: NextAuthOptions = {
         }
 
         // Verify password
-        const isValidPassword = await verifyPassword(
+        const isValidPassword = await bcrypt.compare(
           credentials.password,
           user.hashedPassword
         )
@@ -159,9 +159,9 @@ export const authOptions: NextAuthOptions = {
      */
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.id
-        session.user.role = token.role
-        session.user.departmentId = token.departmentId
+        session.user.id = token.id as string
+        session.user.role = token.role as string
+        session.user.departmentId = token.departmentId as string | undefined
       }
 
       return session
@@ -197,22 +197,9 @@ export const authOptions: NextAuthOptions = {
     },
   },
 
-  // Security options
-  cookies: {
-    sessionToken: {
-      name: `next-auth.session-token`,
-      options: {
-        httpOnly: true, // Prevents JavaScript access to cookie
-        sameSite: "lax", // CSRF protection
-        path: "/",
-        secure: process.env.NODE_ENV === "production", // HTTPS only in production
-      },
-    },
-  },
-
   // Enable debug messages in development
   debug: process.env.NODE_ENV === "development",
 
   // Secret for JWT signing and encryption
   secret: process.env.NEXTAUTH_SECRET,
-}
+})
