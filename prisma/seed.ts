@@ -25,7 +25,7 @@ async function main() {
         id: 'dept-youth',
         name: 'Youth Ministry',
         leadName: 'Sarah Johnson',
-        leadEmail: 'youth@church.org',
+        leadEmail: 'youth@rccgnewsongberlin.org',
         leadPhone: '555-0101',
         icon: '👥',
         color: '#3B82F6',
@@ -36,7 +36,7 @@ async function main() {
         id: 'dept-worship',
         name: 'Worship & Arts',
         leadName: 'Michael Chen',
-        leadEmail: 'worship@church.org',
+        leadEmail: 'worship@rccgnewsongberlin.org',
         leadPhone: '555-0102',
         icon: '🎵',
         color: '#8B5CF6',
@@ -47,7 +47,7 @@ async function main() {
         id: 'dept-children',
         name: 'Children\'s Ministry',
         leadName: 'Emily Davis',
-        leadEmail: 'children@church.org',
+        leadEmail: 'children@rccgnewsongberlin.org',
         leadPhone: '555-0103',
         icon: '👶',
         color: '#EC4899',
@@ -58,7 +58,7 @@ async function main() {
         id: 'dept-outreach',
         name: 'Community Outreach',
         leadName: 'James Wilson',
-        leadEmail: 'outreach@church.org',
+        leadEmail: 'outreach@rccgnewsongberlin.org',
         leadPhone: '555-0104',
         icon: '🤲',
         color: '#10B981',
@@ -69,7 +69,7 @@ async function main() {
         id: 'dept-women',
         name: 'Women\'s Ministry',
         leadName: 'Grace Martinez',
-        leadEmail: 'women@church.org',
+        leadEmail: 'women@rccgnewsongberlin.org',
         leadPhone: '555-0105',
         icon: '👩',
         color: '#F59E0B',
@@ -80,7 +80,7 @@ async function main() {
         id: 'dept-men',
         name: 'Men\'s Ministry',
         leadName: 'Robert Thompson',
-        leadEmail: 'men@church.org',
+        leadEmail: 'men@rccgnewsongberlin.org',
         leadPhone: '555-0106',
         icon: '👨',
         color: '#6B7280',
@@ -98,7 +98,7 @@ async function main() {
     // Super Admin
     prisma.user.create({
       data: {
-        email: 'superadmin@church.org',
+        email: 'superadmin@rccgnewsongberlin.org',
         name: 'Super Admin',
         role: 'superadmin',
         hashedPassword,
@@ -108,7 +108,7 @@ async function main() {
     // Admins
     prisma.user.create({
       data: {
-        email: 'admin@church.org',
+        email: 'admin@rccgnewsongberlin.org',
         name: 'Admin User',
         role: 'admin',
         hashedPassword,
@@ -117,7 +117,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        email: 'admin2@church.org',
+        email: 'admin2@rccgnewsongberlin.org',
         name: 'Jane Admin',
         role: 'admin',
         hashedPassword,
@@ -127,7 +127,7 @@ async function main() {
     // Department Leads
     prisma.user.create({
       data: {
-        email: 'youth.lead@church.org',
+        email: 'youth.lead@rccgnewsongberlin.org',
         name: 'Sarah Johnson',
         role: 'lead',
         departmentId: 'dept-youth',
@@ -137,7 +137,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        email: 'worship.lead@church.org',
+        email: 'worship.lead@rccgnewsongberlin.org',
         name: 'Michael Chen',
         role: 'lead',
         departmentId: 'dept-worship',
@@ -147,7 +147,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        email: 'children.lead@church.org',
+        email: 'children.lead@rccgnewsongberlin.org',
         name: 'Emily Davis',
         role: 'lead',
         departmentId: 'dept-children',
@@ -157,7 +157,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        email: 'outreach.lead@church.org',
+        email: 'outreach.lead@rccgnewsongberlin.org',
         name: 'James Wilson',
         role: 'lead',
         departmentId: 'dept-outreach',
@@ -168,7 +168,7 @@ async function main() {
     // Regular Members
     prisma.user.create({
       data: {
-        email: 'member@church.org',
+        email: 'member@rccgnewsongberlin.org',
         name: 'John Member',
         role: 'member',
         departmentId: 'dept-youth',
@@ -178,7 +178,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        email: 'member2@church.org',
+        email: 'member2@rccgnewsongberlin.org',
         name: 'Mary Member',
         role: 'member',
         departmentId: 'dept-worship',
@@ -188,7 +188,7 @@ async function main() {
     }),
     prisma.user.create({
       data: {
-        email: 'member3@church.org',
+        email: 'member3@rccgnewsongberlin.org',
         name: 'David Member',
         role: 'member',
         departmentId: 'dept-children',
@@ -214,9 +214,9 @@ async function main() {
         location: 'Mountain Retreat Center',
         expectedAttendance: 150,
         status: 'approved',
-        creatorId: users.find(u => u.email === 'youth.lead@church.org')!.id,
+        creatorId: users.find(u => u.email === 'youth.lead@rccgnewsongberlin.org')!.id,
         departmentId: 'dept-youth',
-        adminId: users.find(u => u.email === 'admin@church.org')!.id,
+        adminId: users.find(u => u.email === 'admin@rccgnewsongberlin.org')!.id,
         submittedAt: new Date('2026-01-01'),
         reviewedAt: new Date('2026-01-02'),
         approvedAt: new Date('2026-01-03'),
@@ -234,7 +234,7 @@ async function main() {
         location: 'Church Hall',
         expectedAttendance: 50,
         status: 'submitted',
-        creatorId: users.find(u => u.email === 'member2@church.org')!.id,
+        creatorId: users.find(u => u.email === 'member2@rccgnewsongberlin.org')!.id,
         departmentId: 'dept-women',
         submittedAt: new Date('2026-01-02'),
       }
@@ -251,7 +251,7 @@ async function main() {
         location: 'Church Parking Lot',
         expectedAttendance: 100,
         status: 'submitted',
-        creatorId: users.find(u => u.email === 'outreach.lead@church.org')!.id,
+        creatorId: users.find(u => u.email === 'outreach.lead@rccgnewsongberlin.org')!.id,
         departmentId: 'dept-outreach',
         submittedAt: new Date('2026-01-03'),
       }
@@ -268,7 +268,7 @@ async function main() {
         location: 'Church Grounds',
         expectedAttendance: 75,
         status: 'draft',
-        creatorId: users.find(u => u.email === 'children.lead@church.org')!.id,
+        creatorId: users.find(u => u.email === 'children.lead@rccgnewsongberlin.org')!.id,
         departmentId: 'dept-children',
       }
     }),
@@ -301,22 +301,22 @@ async function main() {
   console.log('All passwords: PassWord2021')
   console.log('')
   console.log('🔑 Super Admin:')
-  console.log('   Email: superadmin@church.org')
+  console.log('   Email: superadmin@rccgnewsongberlin.org')
   console.log('')
   console.log('🔑 Admin:')
-  console.log('   Email: admin@church.org')
-  console.log('   Email: admin2@church.org')
+  console.log('   Email: admin@rccgnewsongberlin.org')
+  console.log('   Email: admin2@rccgnewsongberlin.org')
   console.log('')
   console.log('🔑 Department Leads:')
-  console.log('   Youth Lead: youth.lead@church.org')
-  console.log('   Worship Lead: worship.lead@church.org')
-  console.log('   Children Lead: children.lead@church.org')
-  console.log('   Outreach Lead: outreach.lead@church.org')
+  console.log('   Youth Lead: youth.lead@rccgnewsongberlin.org')
+  console.log('   Worship Lead: worship.lead@rccgnewsongberlin.org')
+  console.log('   Children Lead: children.lead@rccgnewsongberlin.org')
+  console.log('   Outreach Lead: outreach.lead@rccgnewsongberlin.org')
   console.log('')
   console.log('🔑 Regular Members:')
-  console.log('   Email: member@church.org')
-  console.log('   Email: member2@church.org')
-  console.log('   Email: member3@church.org')
+  console.log('   Email: member@rccgnewsongberlin.org')
+  console.log('   Email: member2@rccgnewsongberlin.org')
+  console.log('   Email: member3@rccgnewsongberlin.org')
   console.log('─────────────────────────────────────────')
 }
 
