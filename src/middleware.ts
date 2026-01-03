@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
-import { getToken } from "next-auth/jwt"
+import { updateSession } from "@/lib/supabase/middleware"
+import { prisma } from "@/lib/prisma"
 
 /**
- * NextAuth v5 Middleware for Route Protection
+ * Supabase Auth Middleware for Route Protection
  *
  * This middleware protects routes that require authentication.
  * It runs before every request and checks if the user is authenticated.
@@ -17,7 +18,7 @@ import { getToken } from "next-auth/jwt"
  * - / - Public calendar (home page)
  * - /contact - Contact Us page
  * - /login - Login page
- * - /api/auth/* - NextAuth API routes
+ * - /api/auth/* - Auth API routes
  * - /api/events - Public events API
  * - /api/departments - Public departments API
  *
@@ -25,7 +26,7 @@ import { getToken } from "next-auth/jwt"
  * - Automatic redirect to /login for unauthenticated users
  * - Preserves callback URL for post-login redirect
  * - Role-based access control
- * - CSRF protection via NextAuth
+ * - Session refresh via Supabase
  */
 
 export async function middleware(request: NextRequest) {
@@ -46,49 +47,98 @@ export async function middleware(request: NextRequest) {
   // Allow API auth routes
   const isAuthRoute = pathname.startsWith("/api/auth")
 
-  // Allow public routes and auth routes without authentication
+  // Update Supabase session
+  const { supabase, user, response } = await updateSession(request)
+
+  // Allow public routes without authentication
   if (isPublicRoute || isAuthRoute) {
-    return NextResponse.next()
+    return response
   }
 
-  // Get the token using NextAuth's getToken helper
-  const token = await getToken({
-    req: request,
-    secret: process.env.NEXTAUTH_SECRET
-  })
+  // Check for temporary session if no Supabase user
+  let hasValidSession = !!user
+  let userId = user?.id
 
-  // If no token and accessing protected route, redirect to login
-  if (!token) {
+  if (!hasValidSession) {
+    // Check for temporary auth session cookie
+    const tempSession = request.cookies.get('temp-session')
+    if (tempSession) {
+      try {
+        // Parse the session token to get user ID
+        const decoded = Buffer.from(tempSession.value, 'base64').toString()
+        const [tempUserId, timestamp] = decoded.split(':')
+        const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000)
+
+        if (tempUserId && parseInt(timestamp) > thirtyDaysAgo) {
+          hasValidSession = true
+          userId = tempUserId
+        }
+      } catch (error) {
+        console.error('Error parsing temp session:', error)
+      }
+    }
+  }
+
+  // If no valid session and accessing protected route, redirect to login
+  if (!hasValidSession) {
     const url = new URL("/login", request.url)
     url.searchParams.set("callbackUrl", pathname)
     return NextResponse.redirect(url)
   }
 
-  // Role-based access control for specific dashboard routes
-  if (pathname.startsWith("/dashboard/super-admin")) {
-    if (token.role !== "superadmin") {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
-    }
-  }
+  // Get user role from database
+  // Note: In production, you might want to cache this in the session
+  try {
+    // Find user by supabaseId or regular id (for temp auth)
+    const dbUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { supabaseId: userId },
+          { id: userId }
+        ]
+      },
+      select: { role: true }
+    })
 
-  if (pathname.startsWith("/dashboard/admin")) {
-    if (token.role !== "admin" && token.role !== "superadmin") {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+    if (!dbUser) {
+      // User not found in DB - redirect to login
+      const url = new URL("/login", request.url)
+      url.searchParams.set("callbackUrl", pathname)
+      return NextResponse.redirect(url)
     }
-  }
 
-  if (pathname.startsWith("/dashboard/lead")) {
-    if (
-      token.role !== "lead" &&
-      token.role !== "admin" &&
-      token.role !== "superadmin"
-    ) {
-      return NextResponse.redirect(new URL("/dashboard", request.url))
+    // Role-based access control for specific dashboard routes
+    if (pathname.startsWith("/dashboard/super-admin")) {
+      if (dbUser.role !== "superadmin") {
+        return NextResponse.redirect(new URL("/dashboard", request.url))
+      }
     }
+
+    if (pathname.startsWith("/dashboard/admin")) {
+      if (dbUser.role !== "admin" && dbUser.role !== "superadmin") {
+        return NextResponse.redirect(new URL("/dashboard", request.url))
+      }
+    }
+
+    if (pathname.startsWith("/dashboard/lead")) {
+      if (
+        dbUser.role !== "lead" &&
+        dbUser.role !== "admin" &&
+        dbUser.role !== "superadmin"
+      ) {
+        return NextResponse.redirect(new URL("/dashboard", request.url))
+      }
+    }
+  } catch (error) {
+    console.error("Error checking user role:", error)
+    // On error, redirect to login
+    const url = new URL("/login", request.url)
+    url.searchParams.set("callbackUrl", pathname)
+    return NextResponse.redirect(url)
   }
 
   // Allow the request to proceed
-  return NextResponse.next()
+  return response
 }
 
 /**
@@ -98,63 +148,20 @@ export async function middleware(request: NextRequest) {
  * Using negative lookahead to exclude static files and Next.js internals.
  *
  * Protected patterns:
- * - /dashboard/:path* - All dashboard routes
- * - /requests/:path* - All request management routes
- * - /profile/:path* - All profile routes
- *
- * Excluded patterns:
- * - /_next/* - Next.js internals
- * - /api/auth/* - NextAuth routes (handled by NextAuth itself)
- * - /static/* - Static files
- * - /*.* - Files with extensions (images, fonts, etc.)
+ * - /dashboard/* - Dashboard routes
+ * - /requests/* - Event request management
+ * - /profile/* - User profile pages
+ * - All other routes except static files
  */
 export const config = {
   matcher: [
     /*
-     * Match all request paths except:
+     * Match all request paths except for the ones starting with:
      * - _next/static (static files)
      * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     * - public files (public folder)
-     * - api/auth (NextAuth routes)
+     * - favicon.ico, robots.txt, sitemap.xml (metadata files)
+     * - Images, fonts, and other static assets
      */
-    "/((?!_next/static|_next/image|favicon.ico|.*\\..*|api/auth).*)",
+    "/((?!_next/static|_next/image|favicon.ico|robots.txt|sitemap.xml|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|woff|woff2|ttf|otf)$).*)",
   ],
 }
-
-/**
- * Rate Limiting Considerations
- *
- * For production, consider implementing rate limiting to prevent brute force attacks:
- *
- * 1. Login endpoint rate limiting (e.g., 5 attempts per 10 minutes per IP)
- * 2. API rate limiting (e.g., 100 requests per minute per user)
- * 3. Failed login attempt tracking and account lockout
- *
- * Recommended libraries:
- * - @upstash/ratelimit - Redis-based rate limiting
- * - next-rate-limit - In-memory rate limiting
- * - vercel/kv - Vercel KV-based rate limiting
- *
- * Example implementation in API route:
- * ```typescript
- * import { Ratelimit } from "@upstash/ratelimit"
- * import { Redis } from "@upstash/redis"
- *
- * const ratelimit = new Ratelimit({
- *   redis: Redis.fromEnv(),
- *   limiter: Ratelimit.slidingWindow(5, "10 m"),
- * })
- *
- * export async function POST(req: Request) {
- *   const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
- *   const { success } = await ratelimit.limit(ip)
- *
- *   if (!success) {
- *     return new Response("Too many requests", { status: 429 })
- *   }
- *
- *   // Continue with login logic...
- * }
- * ```
- */

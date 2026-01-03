@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs"
 import { redirect } from "next/navigation"
-import { auth } from "./auth"
+import { getSession as getSupabaseSession, getCurrentUser as getSupabaseUser } from "./supabase-auth"
 import type { Role } from "@prisma/client"
 
 /**
@@ -30,11 +30,11 @@ export async function verifyPassword(
 /**
  * Get current session on server-side
  * This function can be used in Server Components, Server Actions, and API Routes
- * NextAuth v5 uses the auth() function instead of getServerSession()
+ * Uses Supabase Auth for session management
  * @returns Session object or null if not authenticated
  */
 export async function getSession() {
-  return await auth()
+  return await getSupabaseSession()
 }
 
 /**
@@ -42,8 +42,7 @@ export async function getSession() {
  * @returns User object from session or null
  */
 export async function getCurrentUser() {
-  const session = await getSession()
-  return session?.user || null
+  return await getSupabaseUser()
 }
 
 /**

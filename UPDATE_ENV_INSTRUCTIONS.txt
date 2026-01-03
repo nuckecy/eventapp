@@ -1,0 +1,17 @@
+IMPORTANT: Update your .env file with your Supabase anon key!
+
+1. Go to: https://app.supabase.com/project/usleblkyxybwvyuyoxvt/settings/api
+
+2. Copy the "anon public" key (it starts with eyJ...)
+
+3. Replace line 20 in your .env file:
+   FROM: NEXT_PUBLIC_SUPABASE_ANON_KEY="YOUR_ANON_KEY_HERE"
+   TO:   NEXT_PUBLIC_SUPABASE_ANON_KEY="eyJ... (your actual key)"
+
+4. Save the .env file
+
+5. Restart the development server:
+   - Stop the current server (Ctrl+C)
+   - Run: pnpm dev
+
+After this, the authentication should work!

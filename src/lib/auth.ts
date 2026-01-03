@@ -80,41 +80,45 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           throw new Error("Email and password are required")
         }
 
-        // Find user in database
-        const user = await prisma.user.findUnique({
-          where: { email: credentials.email.toLowerCase() },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            role: true,
-            departmentId: true,
-            hashedPassword: true,
-          },
-        })
+        try {
+          // Find user in database
+          const user = await prisma.user.findUnique({
+            where: { email: credentials.email.toLowerCase() },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              departmentId: true,
+              hashedPassword: true,
+            },
+          })
 
-        // Check if user exists
-        if (!user) {
-          throw new Error("Invalid email or password")
-        }
+          // Check if user exists
+          if (!user) {
+            throw new Error("Invalid email or password")
+          }
 
-        // Verify password
-        const isValidPassword = await bcrypt.compare(
-          credentials.password,
-          user.hashedPassword
-        )
+          // Verify password
+          const isValidPassword = await bcrypt.compare(
+            credentials.password,
+            user.hashedPassword
+          )
 
-        if (!isValidPassword) {
-          throw new Error("Invalid email or password")
-        }
+          if (!isValidPassword) {
+            throw new Error("Invalid email or password")
+          }
 
-        // Return user object (excluding password)
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          departmentId: user.departmentId || undefined,
+          // Return user object (excluding password)
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            departmentId: user.departmentId || undefined,
+          }
+        } catch (error) {
+          throw error
         }
       },
     }),

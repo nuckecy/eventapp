@@ -12,11 +12,12 @@ datasource db {
 
 model User {
   id              String    @id @default(uuid())
+  supabaseId      String?   @unique @map("supabase_id") // Link to Supabase auth.users
   email           String    @unique
   name            String
   role            Role
   departmentId    String?   @map("department_id")
-  hashedPassword  String    @map("hashed_password")
+  hashedPassword  String?   @map("hashed_password") // Made optional for Supabase Auth
   emailVerified   DateTime? @map("email_verified")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
@@ -31,6 +32,7 @@ model User {
 
   @@index([email])
   @@index([role])
+  @@index([supabaseId])
   @@map("users")
 }
 

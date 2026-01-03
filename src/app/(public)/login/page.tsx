@@ -1,7 +1,6 @@
 "use client"
 
 import { useState } from "react"
-import { signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
@@ -9,7 +8,7 @@ import Link from "next/link"
 import { ChurchIcon, LoaderCircle, AlertCircle } from "lucide-react"
 
 import { loginSchema, type LoginInput } from "@/lib/validators/auth"
-import { getRoleRedirectPath } from "@/lib/auth-utils"
+import { loginAction } from "./actions"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -65,38 +64,33 @@ export default function LoginPage() {
 
   /**
    * Handle form submission
-   * Authenticates user using NextAuth credentials provider
+   * Authenticates user using Supabase Auth
    */
   const onSubmit = async (data: LoginInput) => {
-    try {
-      setIsLoading(true)
-      setError(null)
+    setIsLoading(true)
+    setError(null)
 
-      // Attempt to sign in with credentials
-      const result = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false, // Handle redirect manually
-      })
+    // Create FormData for server action
+    const formData = new FormData()
+    formData.set('email', data.email)
+    formData.set('password', data.password)
+    formData.set('rememberMe', data.rememberMe ? 'on' : 'off')
 
-      if (result?.error) {
-        // Authentication failed
-        setError("Invalid email or password. Please try again.")
-        setIsLoading(false)
-        return
-      }
+    // Call server action
+    const result = await loginAction(formData)
 
-      if (result?.ok) {
-        // Authentication successful
-        // Note: We can't directly access the user role here without an additional API call
-        // For now, redirect to callback URL or home page
-        // The middleware will handle role-based redirects
-        router.push(callbackUrl)
-        router.refresh() // Refresh to update session
-      }
-    } catch (err) {
-      console.error("Login error:", err)
-      setError("An unexpected error occurred. Please try again.")
+    if (result?.error) {
+      // Authentication failed
+      setError(result.error)
+      setIsLoading(false)
+      return
+    }
+
+    if (result?.success && result?.redirectPath) {
+      // Authentication succeeded - redirect to dashboard
+      window.location.href = result.redirectPath
+    } else {
+      // Fallback if no redirect path
       setIsLoading(false)
     }
   }
